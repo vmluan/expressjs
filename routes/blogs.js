@@ -35,10 +35,9 @@ router.post('/login', function(req, res, next) {
   // will have code for authentication here  //luan
 });
 
-router.get('/blogList', function(req, res){
+router.get('/blogList', function(req, res, next){
   console.log('get blog list in routing file');
-  blogPost.findBlogList2(req,res);
- // res.send(result);
+  blogPost.findBlogList2(req, res);
 });
 
 router.post('/blog', auth, function(req, res, next){
@@ -46,5 +45,14 @@ router.post('/blog', auth, function(req, res, next){
   var result = blogPost.saveBlog(req, res);
   res.send(result);
 });
+
+router.get('/blog/:id', function(req, res, next){
+  var result = blogPost.findBlog(req, res);
+});
+router.post('/comment',auth, function(req, res, next){
+  var result = blogPost.saveComment(req, res);
+});
+//self.app.post('/NodeBlog/comment', auth, blogPost.saveComment);
+//self.app.get('/NodeBlog/blog/:id', blogPost.findBlog);
 //self.app.post('/NodeBlog/blog', auth, blogPost.saveBlog);
 module.exports = router;
