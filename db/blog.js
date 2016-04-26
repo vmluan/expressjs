@@ -94,8 +94,8 @@ exports.saveComment = function(req, res) {
     res.send(returnVal);
 };
 
-exports.findBlogList2= function(req, res) {
-    cosole.log('calling findBlogList method in mongodb');
+exports.findBlogList2 = function(req, res) {
+    console.log('calling findBlogList method in mongodb');
     var Blog = mongoose.model('Blog', blogSchema);
     Blog.find({}, function(err, results) {
         // res.send(results); for example.
@@ -106,8 +106,6 @@ exports.findBlogList2= function(req, res) {
         console.log("BlogList:" + JSON.stringify(results));
         res.send(results);
     });
-
-
 };
 
 exports.findBlog = function(req, res) {
