@@ -9,11 +9,11 @@ var basicAuth = require('basic-auth');
 var auth = function (req, res, next) {
   function unauthorized(res) {
     res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-    return res.send(401);
+    return res.sendStatus(401);
   };
   var user = basicAuth(req);
-
   if (!user || !user.name || !user.pass) {
+    console.log(user);
     return unauthorized(res);
   }
   ;
@@ -21,6 +21,7 @@ var auth = function (req, res, next) {
   if (user.name === un && user.pass === pw) {
     return next();
   } else {
+    console.log('---');
     return unauthorized(res);
   }
   ;
@@ -31,11 +32,23 @@ var auth = function (req, res, next) {
 /* POST for login. */
 router.post('/login', function(req, res, next) {
   console.log('call login page');
-  res.json({ authenticated: true }); //always return true for testing purpose.
+  var reqBody = req.body;
+  var auth = false;
+  if (!req.is('application/json')) {
+    res.status(415);
+  } else {
+    if (reqBody.username === un && reqBody.password === pw) {
+      auth = true;
+    }
+  }
+  var returnVal = {
+    "authenticated": auth
+  };
+  res.send(returnVal);
   // will have code for authentication here  //luan
 });
 
-router.get('/blogList', function(req, res, next){
+router.get('/blogList',auth, function(req, res, next){
   console.log('get blog list in routing file');
   blogPost.findBlogList2(req, res);
 });
