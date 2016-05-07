@@ -6,6 +6,12 @@ var pw = 'password';//change this to something private
 // for basic auth
 var basicAuth = require('basic-auth');
 
+var User        = require('../app/models/user');
+var passport	  = require('passport');
+var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
+var config      = require('../config/database'); // get db config file
+
+
 var auth = function (req, res, next) {
   function unauthorized(res) {
     res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
@@ -25,6 +31,44 @@ var auth = function (req, res, next) {
     return unauthorized(res);
   }
   ;
+};
+
+var checkToken = function(req, res, next) {
+  // check header or url parameters or post parameters for token
+  var token = req.body.token || req.query.token || req.headers['x-access-token'];
+  console.log('checking token');
+  // decode token
+  if (token) {
+    // verifies secret and checks exp
+    jwt.verify(token, config.secret, function(err, decoded) {
+      if (err) {
+        return res.json({ success: false, message: 'Failed to authenticate token.' });
+      } else {
+        // if everything is good, save to request for use in other routes
+        req.decoded = decoded;
+        var object = Object.getOwnPropertyNames(decoded);
+        console.log(object);
+        console.log(object[2]);
+        var name = decoded._doc.name;
+        var pass = decoded._doc.password;
+        console.log(name);
+        console.log(pass);
+        // from name and password, we can check roles or whatever we want, If it ok, call next();
+        if(true)
+          next();
+      }
+    });
+
+  } else {
+
+    // if there is no token
+    // return an error
+    return res.status(403).send({
+      success: false,
+      message: 'No token provided.'
+    });
+
+  }
 };
 
 // end of basic auth
@@ -48,24 +92,55 @@ router.post('/login', function(req, res, next) {
   // will have code for authentication here  //luan
 });
 
-router.get('/blogList',auth, function(req, res, next){
+router.post('/authenticate', function(req, res) {
+  // find the user
+  User.findOne({
+    name: req.body.name
+  }, function(err, user) {
+    if (err) throw err;
+
+    if (!user) {
+      res.json({ success: false, message: 'Authentication failed. User not found.' });
+    } else if (user) {
+
+      // if user is found and password is right
+      // create a token
+      user.comparePassword(req.body.password, function(err, isMatch) {
+        if (isMatch && !err) {
+          var token = jwt.sign(user, config.secret, {
+            expiresIn: 600 // number in seconds
+          });
+          res.json({
+            success: true,
+            message: 'Enjoy your token!',
+            token: token
+          });
+        } else {
+          res.send({success: false, msg: 'Authentication failed. Wrong password.'});
+        }
+      });
+    }
+  });
+});
+
+router.get('/blogList',checkToken, function(req, res, next){
   console.log('get blog list in routing file');
   blogPost.findBlogList2(req, res);
 });
 
-router.post('/blog', auth, function(req, res, next){
+router.post('/blog',checkToken, function(req, res, next){
   console.log('connecting database to save new blog');
   var result = blogPost.saveBlog(req, res);
   res.send(result);
 });
 
-router.get('/blog/:id', function(req, res, next){
+router.get('/blog/:id',checkToken, function(req, res, next){
   var result = blogPost.findBlog(req, res);
 });
-router.post('/comment',auth, function(req, res, next){
+router.post('/comment',checkToken, function(req, res, next){
   var result = blogPost.saveComment(req, res);
 });
-//self.app.post('/NodeBlog/comment', auth, blogPost.saveComment);
-//self.app.get('/NodeBlog/blog/:id', blogPost.findBlog);
-//self.app.post('/NodeBlog/blog', auth, blogPost.saveBlog);
+
+// route middleware to verify a token
+//router.use(checkToken);
 module.exports = router;
