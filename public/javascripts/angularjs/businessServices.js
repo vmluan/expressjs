@@ -16,12 +16,14 @@ angularBlogBusinessServices.factory('checkCreds', ['$cookies', function($cookies
 
     }]);
 
+
 angularBlogBusinessServices.factory('getToken', ['$cookies', function($cookies) {
         return function() {
             var returnVal = "";
             var blogCreds = $cookies.blogCreds;
             if (blogCreds !== undefined && blogCreds !== "") {
-                returnVal = btoa(blogCreds);
+                //returnVal = btoa(blogCreds);
+                returnVal = blogCreds;
             }
             return returnVal;
         };
@@ -43,8 +45,8 @@ angularBlogBusinessServices.factory('getUsername', ['$cookies', function($cookie
 
 
 angularBlogBusinessServices.factory('setCreds', ['$cookies', function($cookies) {
-        return function(un, pw) {
-            var token = un.concat(":", pw);
+        return function(un, pw, token) {
+            //var token = un.concat(":", pw);
             $cookies.blogCreds = token;
             $cookies.blogUsername = un;
         };

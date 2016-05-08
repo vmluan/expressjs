@@ -24,9 +24,14 @@ angularBlogServices.factory('BlogList', ['$resource',
 
 angularBlogServices.factory('Login', ['$resource',
     function($resource) {
-        return $resource("./NodeBlog/login", {}, {
+        return $resource("/NodeBlog/login", {}, {
+                login: {method: 'POST', cache: false, isArray: false}
+            }
+        );
+
+/*        return $resource("./NodeBlog/login", {}, {
             login: {method: 'POST', cache: false, isArray: false}            
-        });
+        });*/
     }]);
 
 angularBlogServices.factory('BlogPostComments', ['$resource',

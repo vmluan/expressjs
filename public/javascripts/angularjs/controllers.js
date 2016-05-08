@@ -6,14 +6,15 @@ var angularBlogControllers = angular.module('angularBlogControllers', []);
 
 
 
-angularBlogControllers.controller('BlogCtrl', ['$scope', 'BlogList', '$location', 'checkCreds',
-    function BlogCtrl($scope, BlogList, $location, checkCreds) {
+angularBlogControllers.controller('BlogCtrl', ['$scope', 'BlogList', '$location', 'checkCreds','getToken',
+    function BlogCtrl($scope, BlogList, $location, checkCreds,getToken) {
         if (!checkCreds()) {
             $location.path('/login');
         }
+        var token = getToken();
         $scope.blogList = [];
         $scope.brandColor = "color: white;";
-        BlogList.get({},
+        BlogList.get({token:token},
                 function success(response) {
                     //alert($scope.challenge.question);
                     console.log("Success:" + JSON.stringify(response));
@@ -34,8 +35,9 @@ angularBlogControllers.controller('BlogViewCtrl', ['$scope', '$routeParams', 'Bl
             $location.path('/login');
         }
         var blogId = $routeParams.id;
+        var token = getToken();
         $scope.blg = 1;
-        BlogPost.get({id: blogId},
+        BlogPost.get({id: blogId,token: token},
         function success(response) {
             //alert($scope.challenge.question);
             console.log("Success:" + JSON.stringify(response));
@@ -53,7 +55,8 @@ angularBlogControllers.controller('BlogViewCtrl', ['$scope', '$routeParams', 'Bl
             $http.defaults.headers.common['Authorization'] = 'Basic ' + getToken();
             var postData = {
                 "commentText": $scope.commentText,
-                "blog" : $scope.blogId
+                "blog" : $scope.blogId,
+                "token" : getToken()
             };
              
             BlogPostComments.save({}, postData,
@@ -87,12 +90,12 @@ angularBlogControllers.controller('LoginCtrl', ['$scope', '$location', 'Login', 
                     function success(response) {
                         console.log("Success:" + JSON.stringify(response));
                         if (response.authenticated) {
-                            setCreds($scope.username, $scope.password)
+                            setCreds($scope.username, $scope.password, response.token);
+                            console.log('token is ' + response.token);
                             $location.path('/');
                         } else {
                             $scope.error = "Login Failed"
                         }
-
                     },
                     function error(errorResponse) {
                         console.log("Error:" + JSON.stringify(errorResponse));
@@ -132,7 +135,8 @@ angularBlogControllers.controller('NewBlogPostCtrl', ['$scope', 'BlogPost', '$lo
             var postData = {
                 "introText": $scope.introText,
                 "blogText" : $scope.blogText,
-                "languageId": $scope.languageId
+                "languageId": $scope.languageId,
+                "token": getToken()
             };
              
             BlogPost.save({}, postData,

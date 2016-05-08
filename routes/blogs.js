@@ -76,7 +76,7 @@ var checkToken = function(req, res, next) {
 /* POST for login. */
 router.post('/login', function(req, res, next) {
   console.log('call login page');
-  var reqBody = req.body;
+  /*var reqBody = req.body;
   var auth = false;
   if (!req.is('application/json')) {
     res.status(415);
@@ -88,8 +88,39 @@ router.post('/login', function(req, res, next) {
   var returnVal = {
     "authenticated": auth
   };
-  res.send(returnVal);
+  res.send(returnVal);*/
+
   // will have code for authentication here  //luan
+  // find the user
+  console.log('===== ' + req.body.username);
+  User.findOne({
+    name: req.body.username
+  }, function(err, user) {
+    if (err) throw err;
+
+    if (!user) {
+      res.json({ success: false, message: 'Authentication failed. User not found.' });
+    } else if (user) {
+
+      // if user is found and password is right
+      // create a token
+      user.comparePassword(req.body.password, function(err, isMatch) {
+        if (isMatch && !err) {
+          var token = jwt.sign(user, config.secret, {
+            expiresIn: 600 // number in seconds
+          });
+          res.json({
+            authenticated: true,
+            message: 'Enjoy your token!',
+            token: token
+          });
+        } else {
+          res.send({authenticated: false, msg: 'Authentication failed. Wrong password.'});
+        }
+      });
+    }
+  });
+
 });
 
 router.post('/authenticate', function(req, res) {
