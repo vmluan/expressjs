@@ -42,6 +42,9 @@ var checkToken = function(req, res, next) {
     // verifies secret and checks exp
     jwt.verify(token, config.secret, function(err, decoded) {
       if (err) {
+        if(err.name == 'TokenExpiredError'){
+          // handle when token has expired.
+        }
         return res.json({ success: false, message: 'Failed to authenticate token.' });
       } else {
         // if everything is good, save to request for use in other routes
@@ -54,8 +57,12 @@ var checkToken = function(req, res, next) {
         console.log(name);
         console.log(pass);
         // from name and password, we can check roles or whatever we want, If it ok, call next();
-        if(true)
+        if(true){
           next();
+          // we may nee to renew token here to create new token when old token is valid.
+          // need a good way to do it. check if the remaining time is less than a specific value, then renew.
+        }
+
       }
     });
 
@@ -96,7 +103,9 @@ router.post('/login', function(req, res, next) {
   User.findOne({
     name: req.body.username
   }, function(err, user) {
-    if (err) throw err;
+    if (err) {
+      throw err;
+    }
 
     if (!user) {
       res.json({ success: false, message: 'Authentication failed. User not found.' });
@@ -107,7 +116,7 @@ router.post('/login', function(req, res, next) {
       user.comparePassword(req.body.password, function(err, isMatch) {
         if (isMatch && !err) {
           var token = jwt.sign(user, config.secret, {
-            expiresIn: 600 // number in seconds
+            expiresIn: 60 // number in seconds
           });
           res.json({
             authenticated: true,
